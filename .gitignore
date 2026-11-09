@@ -9,3 +9,6 @@ wheels/
 # Virtual environments
 .venv
 .env
+.DS_Store
+*_buggy_labels/
+*.png
