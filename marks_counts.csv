@@ -1,0 +1,6 @@
+emotion,train_n,train_bang,train_q,pool_hard_n,pool_hard_bang,pool_hard_q,hard100_bang,hard100_q,hard100_removed,hard100_nomarks_bang,test_n,test_bang,test_q
+anger,2768,108,61,311,17,7,9,3,10,0,2767,112,88
+fear,2768,108,61,215,17,6,9,2,9,0,2767,112,88
+joy,2768,108,61,217,17,6,8,3,8,0,2767,112,88
+sadness,2768,108,61,321,11,4,1,1,2,0,2767,112,88
+surprise,2768,108,61,571,23,18,5,5,6,0,2767,112,88
