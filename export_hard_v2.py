@@ -8,6 +8,7 @@ Conjuntos de entrenamiento v2 (C1/C2/C4), a partir de los scores v2 (pool de 30 
   hard_without_marks = igual, tras excluir textos con '!'.
   qmarks = igual a without_marks pero ordenando por (1-score)*(1+alpha*n_'?').
   random = n/2 por clase al azar (control con el mismo balance).
+  hardmod = difícil moderado: excluye score 0; n/2 por clase con score más cercano a --target (0.35).
 
 Salida: hard_texts_v2/{hardv2_,randomv2_}{e}[_qmarks][_without_marks].txt (text<TAB>label) + MANIFEST.csv
 con el sha256 de cada archivo.
@@ -39,6 +40,16 @@ def pick(df, key, n, rng):
     return pd.concat(out)
 
 
+def pick_near(df, target, n, rng):
+    """n/2 por clase con score más cercano a `target`, excluyendo score 0 (textos que ningún prompt acierta)."""
+    out = []
+    for lab in (0, 1):
+        sub = df[(df["label"] == lab) & (df["score"] > 0)]
+        order = np.lexsort((rng.random(len(sub)), (sub["score"] - target).abs().to_numpy()))
+        out.append(sub.iloc[order[: n // 2]])
+    return pd.concat(out)
+
+
 def write(sub, path, manifest, name, sentiment):
     with open(path, "w", encoding="utf-8") as f:
         for t, l in zip(sub["text"], sub["label"]):
@@ -56,6 +67,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--n", type=int, default=100)
     ap.add_argument("--alpha", type=float, default=1.0)
+    ap.add_argument("--target", type=float, default=0.35, help="score central del difícil moderado")
     ap.add_argument("--seed", type=int, default=5)
     ap.add_argument("--out", default="hard_texts_v2")
     args = ap.parse_args()
@@ -75,6 +87,8 @@ def main():
             f"hardv2_{s}_without_marks": pick(nb, "score", args.n, rng),
             f"hardv2_{s}_qmarks_without_marks": pick(nb, "hardness_q", args.n, rng),
             f"randomv2_{s}": pick(df.assign(r=rng.random(len(df))), "r", args.n, rng),
+            # difícil moderado: sin score 0, 50/clase, score más cercano a --target
+            f"hardmod_{s}": pick_near(df, args.target, args.n, rng),
         }
         for name, sub in sets.items():
             write(sub, os.path.join(args.out, name + ".txt"), manifest, name, s)
